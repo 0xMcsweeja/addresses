@@ -7,152 +7,95 @@
 ╚══════╝    ╚═╝   ╚═╝  ╚═╝╚═╝╚═╝  ╚═╝╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝
 ```
 
-# eth address maker
+# Ethereum Address Generator
 
-yo this thing makes sweet ethereum vanity addresses. u can use it in terminal mode or with the cool web ui we added. make addresses with whatever letters or patterns u want - all works locally so ur keys stay safe
+Generate custom Ethereum vanity addresses with specific patterns. Available as both a command-line tool and a web interface. All processing happens locally for maximum security.
 
-## what it does
+## Features
 
-### terminal mode
-- makes addresses starting with whatever (after the 0x)
-- makes addresses ending with whatever
-- makes addresses with whatever text inside em
-- case-sensitive or not - ur choice
-- make as many as u want
-- saves em to a json file
+### Command Line
+- Create addresses with custom prefixes, suffixes, or containing specific text
+- Toggle case sensitivity
+- Generate multiple addresses at once
+- Save results to JSON
 
-### web ui
-- slick interface with realtime updates
-- shows u how fast it's churning thru addresses
-- use one pattern or stack multiple patterns at once
-- quick buttons for popular stuff (dead, beef, cafe)
-- copy addresses and keys with one click
-- export everything to json
-- uses all ur cpu cores for max speed
+### Web Interface
+- Real-time generation with live stats
+- Flexible pattern matching (single or multiple patterns)
+- Performance monitoring with speed charts
+- One-click copy for addresses and keys
+- Quick presets for popular patterns
 
-## get it running
+## Quick Start
 
 ```bash
-# grab the code
+# Clone repo
 git clone https://github.com/ethereum-vanity-address/generator.git
 cd generator
 
-# install stuff
+# Install dependencies
 npm install
 
-# make it executable
+# Make executable
 chmod +x vanity-eth.js
 ```
 
-## using it
+## Usage
 
-### terminal mode
+### Command Line
 
 ```bash
 ./vanity-eth.js [options]
 ```
 
-### web ui
-
-the web ui is way cooler - it's got all the features with a nice interface
-
-fire it up:
+### Web Interface
 
 ```bash
 npm run web
 ```
 
-open ur browser to:
+Then visit `http://localhost:3000` in your browser.
 
-```
-http://localhost:3000
-```
-
-#### web ui features
-
-here's what makes the web ui awesome:
-
-- **realtime generation**: watch addresses pop up as they're found
-- **pattern setup**:
-  - basic mode for simple searches
-  - advanced mode for searching multiple patterns at once
-  - case matching toggle
-- **performance stuff**:
-  - speed chart showing how many addresses/second
-  - progress bar
-  - cpu core selector
-- **address handling**:
-  - see all ur found addresses
-  - copy addresses or keys with one click
-  - export everything as json
-  - clear everything with one button
-- **quick patterns**: one-click buttons for:
-  - "dead" addresses
-  - "beef" addresses
-  - "cafe" addresses
-  - "000" prefix
-
-### options for terminal mode
+### Command Line Options
 
 ```
 Options:
-  -V, --version                  output the version number
-  -p, --prefix <string>          Address starts with this prefix (after 0x) (default: "")
-  -s, --suffix <string>          Address ends with this suffix (default: "")
-  -c, --contains <string>        Address contains this string (default: "")
-  -m, --multi-pattern <json>     JSON array of patterns to match any of, e.g. '[{"prefix":"000"},{"prefix":"abc"}]'
-  -i, --case-insensitive         Case insensitive matching (default: false)
+  -p, --prefix <string>          Address starts with this prefix (after 0x)
+  -s, --suffix <string>          Address ends with this suffix
+  -c, --contains <string>        Address contains this string
+  -m, --multi-pattern <json>     JSON array of patterns
+  -i, --case-insensitive         Case insensitive matching
   -n, --num <number>             Number of addresses to generate (default: "1")
   -o, --output <file>            Output file path (default: "found_addresses.json")
-  -w, --workers <number>         Number of worker threads (default: "1")
-  -d, --display-interval <number> Progress display interval in seconds (default: "1")
+  -w, --workers <number>         Number of worker threads
   -h, --help                     display help for command
 ```
 
-### examples
+### Examples
 
 ```bash
-# make an address starting with "abc"
+# Address starting with "abc"
 ./vanity-eth.js --prefix abc
 
-# make an address ending with "123"
-./vanity-eth.js --suffix 123
-
-# make an address with "cafe" in it
+# Address with "cafe" in it
 ./vanity-eth.js --contains cafe
 
-# make 5 addresses starting with "abc" (case doesn't matter)
+# 5 addresses starting with "abc" (case-insensitive)
 ./vanity-eth.js --prefix abc --case-insensitive --num 5
 
-# make an address starting with "abc" and save it somewhere specific
-./vanity-eth.js --prefix abc --output my_addresses.json
-
-# make an address matching ANY pattern (starts with "000" OR starts with "abc")
-./vanity-eth.js --multi-pattern '[{"prefix":"000"},{"prefix":"abc"}]'
-
-# make an address with any of these words
-./vanity-eth.js --multi-pattern '[{"contains":"dead"},{"contains":"beef"},{"contains":"cafe"}]' --case-insensitive
+# Address matching multiple patterns
+./vanity-eth.js --multi-pattern '[{"contains":"dead"},{"contains":"beef"}]' --case-insensitive
 ```
 
-### common patterns
-
-there's a shortcut script for popular patterns:
+For common patterns, use the interactive generator:
 
 ```bash
-# run the pattern picker
-./generate-common.js
-# or
 npm run common
 ```
 
-pick from:
-- repeating chars at start (000...)
-- repeating chars at end (...000)
-- words like "dead", "beef", "cafe", "1337"
+## Output Format
 
-## what the output looks like
-
-everything gets saved to a json file (default: `found_addresses.json`):
+Results are saved to `found_addresses.json`:
 
 ```json
 [
@@ -165,68 +108,47 @@ everything gets saved to a json file (default: `found_addresses.json`):
 ]
 ```
 
-## keeping ur stuff safe
+## Security
 
-### basic security
-- never share ur private keys with anyone!!
-- this tool runs everything locally - no network stuff
-- for big money accounts, use a hardware wallet
+### General
+- Private keys never leave your machine
+- All processing is done locally
+- For high-value wallets, use a hardware wallet
 
-### web ui security
-- all processing happens on ur machine
-- private keys never leave ur computer
-- only performance data and public addresses go over websockets
-- private keys only exist in memory and the local file
-- there's warnings about key security right in the ui
-- socket connections stay on localhost
+### Web Interface
+- WebSockets only transmit performance metrics and public addresses
+- Private keys exist only in local memory and storage
+- UI includes visual security warnings
+- Socket.io connections limited to localhost by default
 
-### pro tips
-- for super security, run this on a disconnected machine
-- use a separate device for high-value wallets
-- double-check addresses before using them
-- clear or encrypt the json file when you're done
+### Best Practices
+- For maximum security, run on an air-gapped computer
+- Use a separate device for high-value wallets
+- Always verify generated addresses before use
+- Regularly clear or encrypt generated key files
 
-## performance
+## Performance
 
-this thing uses Node.js worker threads to max out your cpu. by default, it uses all cores, but u can change it:
+Uses multi-threading to maximize performance. Adjust thread count with:
 
 ```bash
 ./vanity-eth.js --prefix abc --workers 4
 ```
 
-## what's in the box
+## Project Structure
 
 ```
 ethereum-vanity-address-generator/
-├── README.md               # this file
-├── vanity-eth.js           # main command line tool
-├── address-worker.js       # worker thread code
-├── generate-common.js      # common pattern script
-├── debug-match.js          # pattern tester
-├── server.js               # web server
-├── found_addresses.json    # where addresses get saved
-├── package.json            # dependencies
-├── public/                 # web ui static files
-│   ├── css/
-│   │   └── style.css       # ui styles
-│   └── js/
-│       └── app.js          # ui code
-└── views/                  # templates
-    └── index.ejs           # main web page
+├── README.md               # Documentation
+├── vanity-eth.js           # Main CLI tool
+├── address-worker.js       # Worker thread implementation
+├── generate-common.js      # Common pattern script
+├── debug-match.js          # Pattern testing tool
+├── server.js               # Web server
+├── public/                 # Web UI assets
+└── views/                  # Templates
 ```
 
-## debugging
-
-need to check if an address matches ur pattern? use this:
-
-```bash
-# test address against pattern
-./debug-match.js 0xabcdef1234567890 '[{"prefix":"abc"},{"contains":"123"}]'
-
-# test against a simple pattern
-./debug-match.js 0xabcdef1234567890 '{"prefix":"abc"}'
-```
-
-## license
+## License
 
 MIT
