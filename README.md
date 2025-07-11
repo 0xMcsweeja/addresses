@@ -30,14 +30,12 @@ Generate custom Ethereum vanity addresses with specific patterns. Available as b
 
 ```bash
 # Clone repo
-git clone https://github.com/ethereum-vanity-address/generator.git
-cd generator
+git clone https://github.com/0xMcsweeja/addresses.git
+cd addresses
 
 # Install dependencies
 npm install
 
-# Make executable
-chmod +x vanity-eth.js
 ```
 
 ## Usage
@@ -45,6 +43,15 @@ chmod +x vanity-eth.js
 ### Command Line
 
 ```bash
+npm run start
+```
+
+OR
+
+```bash
+# Make executable
+chmod +x vanity-eth.js
+
 ./vanity-eth.js [options]
 ```
 
