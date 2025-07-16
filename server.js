@@ -69,7 +69,7 @@ io.on('connection', (socket) => {
     stopAllWorkers();
     
     const numWorkers = Math.min(
-      parseInt(params.workers) || require('os').cpus().length,
+      parseInt(params.workers) || Math.min(4, require('os').cpus().length),
       require('os').cpus().length
     );
     

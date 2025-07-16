@@ -36,7 +36,7 @@ function matchesCriteria(address, criteria) {
   return matchSinglePattern(address, criteria);
 }
 
-// Helper to match a single pattern
+// Helper to match a single pattern (optimized)
 function matchSinglePattern(address, pattern) {
   // Skip empty patterns (important for multi-pattern mode)
   if ((pattern.prefix === '' || pattern.prefix === undefined) && 
@@ -45,21 +45,47 @@ function matchSinglePattern(address, pattern) {
     return false;
   }
 
-  const checkAddress = pattern.caseInsensitive ? address.toLowerCase() : address;
+  // Address is already lowercase from publicKeyToAddress
+  const checkAddress = address;
+  
+  // Pre-computed pattern strings with case handling
   const prefix = pattern.caseInsensitive && pattern.prefix ? pattern.prefix.toLowerCase() : (pattern.prefix || '');
   const suffix = pattern.caseInsensitive && pattern.suffix ? pattern.suffix.toLowerCase() : (pattern.suffix || '');
   const contains = pattern.caseInsensitive && pattern.contains ? pattern.contains.toLowerCase() : (pattern.contains || '');
 
-  // Use stricter matching - require at least one criterion to be non-empty and matching
-  const prefixMatches = prefix === '' || checkAddress.slice(2, 2 + prefix.length) === prefix;
-  const suffixMatches = suffix === '' || checkAddress.slice(-suffix.length) === suffix;
-  const containsMatches = contains === '' || checkAddress.includes(contains);
+  // Early exit optimizations - check most restrictive patterns first
+  if (prefix && !checkAddress.startsWith('0x' + prefix)) {
+    return false;
+  }
+  
+  if (suffix && !checkAddress.endsWith(suffix)) {
+    return false;
+  }
+  
+  if (contains && checkAddress.indexOf(contains) === -1) {
+    return false;
+  }
 
-  // Debug logging for worker (disable in production)
-  // console.log(`Checking address ${address} against pattern:`, { prefix, suffix, contains });
-  // console.log(`Matches: prefix=${prefixMatches}, suffix=${suffixMatches}, contains=${containsMatches}`);
+  return true;
+}
 
-  return prefixMatches && suffixMatches && containsMatches;
+// Fast pre-check for pattern matching before expensive operations
+function fastPatternPreCheck(privateKeyBytes, criteria) {
+  // For very specific patterns, we can do a quick probability check
+  // Skip if pattern is too complex or requires full address generation
+  if (criteria.multiplePatterns) {
+    // Multiple patterns always need full generation
+    return true;
+  }
+  
+  // For simple prefix patterns, we can sometimes skip based on private key
+  if (criteria.prefix && criteria.prefix.length >= 6) {
+    // Very specific prefixes are rare, generate anyway
+    return true;
+  }
+  
+  // For most cases, proceed with full generation
+  return true;
 }
 
 // Generate a random Ethereum keypair
@@ -101,7 +127,7 @@ function toChecksumAddress(address) {
 // Start generating and checking addresses
 function generateAndCheck() {
   let attempts = 0;
-  const batchSize = 1000; // Check addresses in batches for better reporting
+  const batchSize = 10000; // Larger batch size reduces reporting overhead for better performance
   
   while (true) {
     for (let i = 0; i < batchSize; i++) {
@@ -109,6 +135,7 @@ function generateAndCheck() {
       const keypair = generateRandomKeypair();
       
       if (matchesCriteria(keypair.address, searchCriteria)) {
+        // Only generate checksum address when we have a match
         const checksumAddress = toChecksumAddress(keypair.address);
         parentPort.postMessage({
           type: 'found',

@@ -21,7 +21,7 @@ program
   .option('-i, --case-insensitive', 'Case insensitive matching', false)
   .option('-n, --num <number>', 'Number of addresses to generate', '1')
   .option('-o, --output <file>', 'Output file path', 'found_addresses.json')
-  .option('-w, --workers <number>', 'Number of worker threads', String(require('os').cpus().length))
+  .option('-w, --workers <number>', 'Number of worker threads', String(Math.min(4, require('os').cpus().length)))
   .option('-d, --display-interval <number>', 'Progress display interval in seconds', '1')
   .parse();
 
@@ -57,7 +57,7 @@ function matchesCriteria(address, criteria) {
   return matchSinglePattern(address, criteria);
 }
 
-// Helper to match a single pattern
+// Helper to match a single pattern (optimized)
 function matchSinglePattern(address, pattern) {
   // Skip empty patterns (important for multi-pattern mode)
   if ((pattern.prefix === '' || pattern.prefix === undefined) && 
@@ -66,17 +66,28 @@ function matchSinglePattern(address, pattern) {
     return false;
   }
 
-  const checkAddress = pattern.caseInsensitive ? address.toLowerCase() : address;
+  // Address is already lowercase from publicKeyToAddress
+  const checkAddress = address;
+  
+  // Pre-computed pattern strings with case handling
   const prefix = pattern.caseInsensitive && pattern.prefix ? pattern.prefix.toLowerCase() : (pattern.prefix || '');
   const suffix = pattern.caseInsensitive && pattern.suffix ? pattern.suffix.toLowerCase() : (pattern.suffix || '');
   const contains = pattern.caseInsensitive && pattern.contains ? pattern.contains.toLowerCase() : (pattern.contains || '');
 
-  // Use stricter matching - require at least one criterion to be non-empty and matching
-  const prefixMatches = prefix === '' || checkAddress.slice(2, 2 + prefix.length) === prefix;
-  const suffixMatches = suffix === '' || checkAddress.slice(-suffix.length) === suffix;
-  const containsMatches = contains === '' || checkAddress.includes(contains);
+  // Early exit optimizations - check most restrictive patterns first
+  if (prefix && !checkAddress.startsWith('0x' + prefix)) {
+    return false;
+  }
+  
+  if (suffix && !checkAddress.endsWith(suffix)) {
+    return false;
+  }
+  
+  if (contains && checkAddress.indexOf(contains) === -1) {
+    return false;
+  }
 
-  return prefixMatches && suffixMatches && containsMatches;
+  return true;
 }
 
 // Generate a random Ethereum keypair
@@ -121,7 +132,7 @@ if (!isMainThread) {
   
   const generateAndCheck = () => {
     let attempts = 0;
-    const batchSize = 1000; // Check addresses in batches for better reporting
+    const batchSize = 10000; // Larger batch size reduces reporting overhead for better performance
     
     while (true) {
       for (let i = 0; i < batchSize; i++) {
@@ -129,6 +140,7 @@ if (!isMainThread) {
         const keypair = generateRandomKeypair();
         
         if (matchesCriteria(keypair.address, searchCriteria)) {
+          // Only generate checksum address when we have a match
           const checksumAddress = toChecksumAddress(keypair.address);
           parentPort.postMessage({
             type: 'found',
